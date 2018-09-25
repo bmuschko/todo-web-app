@@ -12,9 +12,9 @@ services:
       source: todo-vol
       target: /code
     healthcheck:
-      test: curl --fail -s http://localhost:8080/actuator/health || exit 1
-      interval: 1m30s
-      timeout: 10s
+      test: wget --quiet --tries=1 --spider http://localhost:8080/actuator/health || exit 1
+      interval: 10s
+      timeout: 5s
       retries: 3
 
 networks:
