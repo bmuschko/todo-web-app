@@ -15,7 +15,7 @@ import java.util.List;
 @Service
 public class ToDoServiceImpl implements ToDoService {
 
-    public final static String BASE_URL = "http://localhost:9090";
+    public final static String BASE_URL = "http://localhost:8080";
     private final static MediaType JSON_MEDIA_TYPE = MediaType.get("application/json");
     private final OkHttpClient client = new OkHttpClient();
 

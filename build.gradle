@@ -7,6 +7,7 @@ buildscript {
        classpath 'org.springframework.boot:spring-boot-gradle-plugin:2.0.5.RELEASE'
        classpath 'io.spring.gradle:dependency-management-plugin:1.0.6.RELEASE'
        classpath 'com.bmuschko:gradle-docker-plugin:3.6.1'
+       classpath 'gradle.plugin.com.avast.gradle:gradle-docker-compose-plugin:0.8.7'
    }
 }
 
@@ -14,6 +15,7 @@ apply plugin: 'war'
 apply plugin: 'org.springframework.boot'
 apply plugin: 'io.spring.dependency-management'
 apply plugin: 'com.bmuschko.docker-spring-boot-application'
+apply plugin: 'com.avast.gradle.docker-compose'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -27,13 +29,23 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'com.squareup.okhttp3:okhttp:3.11.0'
-    implementation('com.googlecode.json-simple:json-simple:1.1.1') {
-        exclude group: 'junit', module: 'junit'
-    }
+    implementation 'com.googlecode.json-simple:json-simple:1.1.1'
     runtime 'javax.servlet:jstl'
     providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat'
     providedRuntime 'org.apache.tomcat.embed:tomcat-embed-jasper'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    def junitJupiterVersion = '5.3.1'
+    testImplementation "org.junit.jupiter:junit-jupiter-api:$junitJupiterVersion"
+    testImplementation "org.junit.jupiter:junit-jupiter-params:$junitJupiterVersion"
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$junitJupiterVersion"
+}
 
+configurations.all {
+    exclude group: 'junit', module: 'junit'
+}
+
+test {
+    useJUnitPlatform()
 }
 
 docker {
@@ -45,6 +57,12 @@ docker {
     springBootApplication {
         tag = "$docker.registryCredentials.username/todo-web-app"
     }
+}
+
+dockerCompose {
+    useComposeFiles = ['docker-compose.yml']
+    isRequiredBy(project.tasks.test)
+    exposeAsSystemProperties(project.tasks.test)
 }
 
 String getConfigurationProperty(String envVar, String sysProp) {
