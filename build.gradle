@@ -1,0 +1,52 @@
+buildscript {
+   repositories {
+       gradlePluginPortal()
+   }
+
+   dependencies {
+       classpath 'org.springframework.boot:spring-boot-gradle-plugin:2.0.5.RELEASE'
+       classpath 'io.spring.gradle:dependency-management-plugin:1.0.6.RELEASE'
+       classpath 'com.bmuschko:gradle-docker-plugin:3.6.1'
+   }
+}
+
+apply plugin: 'war'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'io.spring.dependency-management'
+apply plugin: 'com.bmuschko.docker-spring-boot-application'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+version = '1.0'
+
+repositories {
+    jcenter()
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'com.squareup.okhttp3:okhttp:3.11.0'
+    implementation('com.googlecode.json-simple:json-simple:1.1.1') {
+        exclude group: 'junit', module: 'junit'
+    }
+    runtime 'javax.servlet:jstl'
+    providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat'
+    providedRuntime 'org.apache.tomcat.embed:tomcat-embed-jasper'
+
+}
+
+docker {
+    registryCredentials {
+        username = getConfigurationProperty('DOCKER_USERNAME', 'dockerHubUsername')
+        password = getConfigurationProperty('DOCKER_PASSWORD', 'dockerHubPassword')
+        email = getConfigurationProperty('DOCKER_EMAIL', 'dockerHubEmail')
+    }
+    springBootApplication {
+        tag = "$docker.registryCredentials.username/todo-web-app"
+    }
+}
+
+String getConfigurationProperty(String envVar, String sysProp) {
+    System.getenv(envVar) ?: project.findProperty(sysProp)
+}
