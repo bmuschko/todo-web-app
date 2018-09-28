@@ -2,20 +2,38 @@ version: "3.7"
 services:
   web-service:
     image: "bmuschko/todo-web-service:latest"
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
     ports:
-    - target: 8080
-      published: 8080
+      - 8080:8080
     networks:
-    - todo-net
+      - todo-net
     volumes:
-    - type: volume
-      source: todo-vol
-      target: /code
+      - type: volume
+        source: todo-vol
+        target: /code
+    depends_on:
+      - database
     healthcheck:
       test: wget --quiet --tries=1 --spider http://localhost:8080/actuator/health || exit 1
       interval: 10s
       timeout: 5s
       retries: 3
+  database:
+    image: "postgres:9.6.10-alpine"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=todo
+    ports:
+      - 5432:5432
+    healthcheck:
+      test: ["CMD", "pg_isready"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      todo-net:
 
 networks:
   todo-net:
