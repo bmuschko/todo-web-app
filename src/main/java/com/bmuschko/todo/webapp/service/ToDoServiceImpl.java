@@ -6,6 +6,7 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -15,14 +16,16 @@ import java.util.List;
 @Service
 public class ToDoServiceImpl implements ToDoService {
 
-    public final static String BASE_URL = "http://localhost:8080";
     private final static MediaType JSON_MEDIA_TYPE = MediaType.get("application/json");
     private final OkHttpClient client = new OkHttpClient();
+
+    @Value("${todo.web.service.url}")
+    private String webServiceUrl;
 
     @Override
     public List<ToDoItem> findAll() {
         Request request = new Request.Builder()
-                .url(BASE_URL + "/todos")
+                .url(webServiceUrl + "/todos")
                 .build();
         Response response = callEndpoint(request);
         JSONParser parser = new JSONParser();
@@ -43,7 +46,7 @@ public class ToDoServiceImpl implements ToDoService {
     @Override
     public ToDoItem findOne(Long id) {
         Request request = new Request.Builder()
-                .url(BASE_URL + "/todos/" + id)
+                .url(webServiceUrl + "/todos/" + id)
                 .build();
 
         Response response = callEndpoint(request);
@@ -62,14 +65,14 @@ public class ToDoServiceImpl implements ToDoService {
         if (toDoItem.getId() == null) {
             RequestBody requestBody = RequestBody.create(JSON_MEDIA_TYPE, buildToDoItemJson(toDoItem));
             Request request = new Request.Builder()
-                    .url(BASE_URL + "/todos")
+                    .url(webServiceUrl + "/todos")
                     .post(requestBody)
                     .build();
             callEndpoint(request);
         } else {
             RequestBody requestBody = RequestBody.create(JSON_MEDIA_TYPE, buildToDoItemJson(toDoItem));
             Request request = new Request.Builder()
-                    .url(BASE_URL + "/todos/" + toDoItem.getId())
+                    .url(webServiceUrl + "/todos/" + toDoItem.getId())
                     .put(requestBody)
                     .build();
             callEndpoint(request);
@@ -79,7 +82,7 @@ public class ToDoServiceImpl implements ToDoService {
     @Override
     public void delete(ToDoItem toDoItem) {
         Request request = new Request.Builder()
-                .url(BASE_URL + "/todos/" + toDoItem.getId())
+                .url(webServiceUrl + "/todos/" + toDoItem.getId())
                 .delete()
                 .build();
         callEndpoint(request);
