@@ -9,4 +9,8 @@ public class ToDoServiceException extends RuntimeException {
     public ToDoServiceException(Throwable cause) {
         super(cause);
     }
+
+    public ToDoServiceException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }

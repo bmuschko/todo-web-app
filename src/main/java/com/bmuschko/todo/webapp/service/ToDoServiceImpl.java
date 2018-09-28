@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,7 +27,7 @@ public class ToDoServiceImpl implements ToDoService {
     @Override
     public List<ToDoItem> findAll() {
         Request request = new Request.Builder()
-                .url(webServiceUrl + "/todos")
+                .url(buildEndpointUrl("/todos"))
                 .build();
         Response response = callEndpoint(request);
         JSONParser parser = new JSONParser();
@@ -46,7 +48,7 @@ public class ToDoServiceImpl implements ToDoService {
     @Override
     public ToDoItem findOne(Long id) {
         Request request = new Request.Builder()
-                .url(webServiceUrl + "/todos/" + id)
+                .url(buildEndpointUrl("/todos/" + id))
                 .build();
 
         Response response = callEndpoint(request);
@@ -65,14 +67,14 @@ public class ToDoServiceImpl implements ToDoService {
         if (toDoItem.getId() == null) {
             RequestBody requestBody = RequestBody.create(JSON_MEDIA_TYPE, buildToDoItemJson(toDoItem));
             Request request = new Request.Builder()
-                    .url(webServiceUrl + "/todos")
+                    .url(buildEndpointUrl("/todos"))
                     .post(requestBody)
                     .build();
             callEndpoint(request);
         } else {
             RequestBody requestBody = RequestBody.create(JSON_MEDIA_TYPE, buildToDoItemJson(toDoItem));
             Request request = new Request.Builder()
-                    .url(webServiceUrl + "/todos/" + toDoItem.getId())
+                    .url(buildEndpointUrl("/todos/" + toDoItem.getId()))
                     .put(requestBody)
                     .build();
             callEndpoint(request);
@@ -82,10 +84,22 @@ public class ToDoServiceImpl implements ToDoService {
     @Override
     public void delete(ToDoItem toDoItem) {
         Request request = new Request.Builder()
-                .url(webServiceUrl + "/todos/" + toDoItem.getId())
+                .url(buildEndpointUrl("/todos/" + toDoItem.getId()))
                 .delete()
                 .build();
         callEndpoint(request);
+    }
+
+    private URL buildEndpointUrl(String context) {
+        StringBuilder url = new StringBuilder();
+        url.append(webServiceUrl);
+        url.append(context);
+
+        try {
+            return new URL(url.toString());
+        } catch (MalformedURLException e) {
+            throw new ToDoServiceException("Invalid URL", e);
+        }
     }
 
     private Response callEndpoint(Request request) {
