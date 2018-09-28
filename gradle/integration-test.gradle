@@ -1,0 +1,40 @@
+buildscript {
+    repositories {
+        gradlePluginPortal()
+    }
+
+    dependencies {
+        classpath 'gradle.plugin.com.avast.gradle:gradle-docker-compose-plugin:0.8.7'
+    }
+}
+
+apply plugin: com.avast.gradle.dockercompose.DockerComposePlugin
+
+sourceSets {
+    integrationTest {
+        java.srcDir file('src/integrationTest/java')
+        resources.srcDir file('src/integrationTest/resources')
+        compileClasspath += sourceSets.main.output + configurations.testRuntimeClasspath
+        runtimeClasspath += output + compileClasspath
+    }
+}
+
+task integrationTest(type: Test) {
+    description = 'Runs the integration tests.'
+    group = 'verification'
+    testClassesDirs = sourceSets.integrationTest.output.classesDirs
+    classpath = sourceSets.integrationTest.runtimeClasspath
+    mustRunAfter test
+}
+
+check.dependsOn integrationTest
+
+dependencies {
+    integrationTestImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+dockerCompose {
+    useComposeFiles = ['docker-compose.yml']
+    isRequiredBy(project.tasks.integrationTest)
+    exposeAsSystemProperties(project.tasks.integrationTest)
+}
