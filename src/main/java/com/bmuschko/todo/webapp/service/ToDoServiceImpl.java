@@ -70,7 +70,15 @@ public class ToDoServiceImpl implements ToDoService {
                     .url(buildEndpointUrl("/todos"))
                     .post(requestBody)
                     .build();
-            callEndpoint(request);
+            Response response = callEndpoint(request);
+            JSONParser parser = new JSONParser();
+
+            try {
+                JSONObject itemJson = (JSONObject) parser.parse(response.body().string());
+                toDoItem.setId((Long) itemJson.get("id"));
+            } catch(IOException | ParseException e) {
+                throw new ToDoServiceException(e);
+            }
         } else {
             RequestBody requestBody = RequestBody.create(JSON_MEDIA_TYPE, buildToDoItemJson(toDoItem));
             Request request = new Request.Builder()
