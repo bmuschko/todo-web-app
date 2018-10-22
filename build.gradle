@@ -35,14 +35,20 @@ dependencies {
     providedRuntime 'org.apache.tomcat.embed:tomcat-embed-jasper'
 }
 
+ext {
+    dockerUsername = getConfigurationProperty('DOCKER_USERNAME', 'dockerHubUsername')
+    dockerPassword = getConfigurationProperty('DOCKER_PASSWORD', 'dockerHubPassword')
+    dockerEmail = getConfigurationProperty('DOCKER_EMAIL', 'dockerHubEmail')
+}
+
 docker {
     registryCredentials {
-        username = getConfigurationProperty('DOCKER_USERNAME', 'dockerHubUsername')
-        password = getConfigurationProperty('DOCKER_PASSWORD', 'dockerHubPassword')
-        email = getConfigurationProperty('DOCKER_EMAIL', 'dockerHubEmail')
+        username = dockerUsername
+        password = dockerPassword
+        email = dockerEmail
     }
     springBootApplication {
-        tag = "$docker.registryCredentials.username/todo-web-app".toString()
+        tag = "$dockerUsername/todo-web-app".toString()
     }
 }
 
