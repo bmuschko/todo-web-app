@@ -5,18 +5,62 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.util.TestPropertyValues;
+import org.springframework.context.ApplicationContextInitializer;
+import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.testcontainers.containers.DockerComposeContainer;
+import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
+import java.io.File;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@Testcontainers
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
+@ContextConfiguration(initializers = { ToDoServiceImplIntegrationTest.Initializer.class })
 public class ToDoServiceImplIntegrationTest {
+
+    private final static String WEB_SERVICE_NAME = "webservice_1";
+    private final static int WEB_SERVICE_PORT = 8080;
 
     @Autowired
     private ToDoService toDoService;
+
+    @Container
+    public static DockerComposeContainer environment = createComposeContainer();
+
+    private static DockerComposeContainer createComposeContainer() {
+        return new DockerComposeContainer(new File("src/integrationTest/resources/compose-test.yml"))
+                .withExposedService(WEB_SERVICE_NAME, WEB_SERVICE_PORT,
+                    Wait.forHttp("/actuator/health")
+                        .forStatusCode(200));
+    }
+
+    static class Initializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
+        @Override
+        public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
+            TestPropertyValues.of(
+                    "todo.web.service.url=" + getWebServiceUrl()
+            ).applyTo(configurableApplicationContext.getEnvironment());
+        }
+    }
+
+    private static String getWebServiceUrl() {
+        String host = environment.getServiceHost(WEB_SERVICE_NAME, WEB_SERVICE_PORT);
+        Integer port = environment.getServicePort(WEB_SERVICE_NAME, WEB_SERVICE_PORT);
+        StringBuilder webServiceUrl = new StringBuilder();
+        webServiceUrl.append("http://");
+        webServiceUrl.append(host);
+        webServiceUrl.append(":");
+        webServiceUrl.append(port);
+        return webServiceUrl.toString();
+    }
 
     @Test
     public void canCreateNewItemAndRetrieveIt() {

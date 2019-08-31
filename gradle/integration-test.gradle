@@ -1,15 +1,3 @@
-buildscript {
-    repositories {
-        gradlePluginPortal()
-    }
-
-    dependencies {
-        classpath 'gradle.plugin.com.avast.gradle:gradle-docker-compose-plugin:0.8.8'
-    }
-}
-
-apply plugin: com.avast.gradle.dockercompose.DockerComposePlugin
-
 sourceSets {
     integrationTest {
         java.srcDir file('src/integrationTest/java')
@@ -31,10 +19,7 @@ check.dependsOn integrationTest
 
 dependencies {
     integrationTestImplementation 'org.springframework.boot:spring-boot-starter-test'
-}
-
-dockerCompose {
-    useComposeFiles = ['docker-compose.yml']
-    isRequiredBy(project.tasks.integrationTest)
-    exposeAsSystemProperties(project.tasks.integrationTest)
+    def testcontainersVersion = '1.12.0'
+    integrationTestImplementation "org.testcontainers:junit-jupiter:$testcontainersVersion"
+    integrationTestImplementation "org.testcontainers:postgresql:$testcontainersVersion"
 }

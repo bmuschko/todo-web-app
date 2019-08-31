@@ -1,0 +1,2 @@
+webservice:
+  image: "bmuschko/todo-web-service:1.0.0"

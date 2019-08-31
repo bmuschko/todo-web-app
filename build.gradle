@@ -1,25 +1,16 @@
-buildscript {
-   repositories {
-       gradlePluginPortal()
-   }
-
-   dependencies {
-       classpath 'org.springframework.boot:spring-boot-gradle-plugin:2.0.6.RELEASE'
-       classpath 'io.spring.gradle:dependency-management-plugin:1.0.6.RELEASE'
-       classpath 'com.bmuschko:gradle-docker-plugin:4.0.1'
-   }
+plugins {
+    id 'war'
+    id 'org.springframework.boot' version '2.1.2.RELEASE'
+    id 'io.spring.dependency-management' version '1.0.6.RELEASE'
+    id 'com.google.cloud.tools.jib' version '1.5.0'
 }
-
-apply plugin: 'war'
-apply plugin: 'org.springframework.boot'
-apply plugin: 'io.spring.dependency-management'
-apply plugin: 'com.bmuschko.docker-spring-boot-application'
-apply from: 'gradle/test-setup.gradle'
-apply from: 'gradle/integration-test.gradle'
 
 sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
-version = '1.0'
+version = '1.0.0'
+
+apply from: 'gradle/test-setup.gradle'
+apply from: 'gradle/integration-test.gradle'
 
 repositories {
     jcenter()
@@ -35,23 +26,11 @@ dependencies {
     providedRuntime 'org.apache.tomcat.embed:tomcat-embed-jasper'
 }
 
-ext {
-    dockerUsername = getConfigurationProperty('DOCKER_USERNAME', 'dockerHubUsername')
-    dockerPassword = getConfigurationProperty('DOCKER_PASSWORD', 'dockerHubPassword')
-    dockerEmail = getConfigurationProperty('DOCKER_EMAIL', 'dockerHubEmail')
-}
-
-docker {
-    registryCredentials {
-        username = dockerUsername
-        password = dockerPassword
-        email = dockerEmail
+jib {
+    to {
+        image = "bmuschko/todo-web-app:$version"
     }
-    springBootApplication {
-        tag = "$dockerUsername/todo-web-app".toString()
+    container {
+        ports = ['8081']
     }
-}
-
-String getConfigurationProperty(String envVar, String sysProp) {
-    System.getenv(envVar) ?: project.findProperty(sysProp)
 }
