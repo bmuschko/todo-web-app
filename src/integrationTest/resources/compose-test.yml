@@ -1,2 +1,14 @@
-webservice:
-  image: "bmuschko/todo-web-service:1.0.0"
+version: "2.0"
+services:
+  database:
+    image: "postgres:9.6.10-alpine"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=todo
+  webservice:
+    image: "bmuschko/todo-web-service:1.0.0"
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+    depends_on:
+      - database

@@ -3,6 +3,8 @@ package com.bmuschko.todo.webapp.service;
 import com.bmuschko.todo.webapp.model.ToDoItem;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.util.TestPropertyValues;
@@ -11,6 +13,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.testcontainers.containers.DockerComposeContainer;
+import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -26,8 +29,11 @@ import static org.junit.jupiter.api.Assertions.*;
 @ContextConfiguration(initializers = { ToDoServiceImplIntegrationTest.Initializer.class })
 public class ToDoServiceImplIntegrationTest {
 
+    private static final Logger logger = LoggerFactory.getLogger(ToDoServiceImplIntegrationTest.class);
     private final static String WEB_SERVICE_NAME = "webservice_1";
     private final static int WEB_SERVICE_PORT = 8080;
+    private final static String DATABASE_NAME = "database_1";
+    private final static int DATABASE_PORT = 5432;
 
     @Autowired
     private ToDoService toDoService;
@@ -37,9 +43,12 @@ public class ToDoServiceImplIntegrationTest {
 
     private static DockerComposeContainer createComposeContainer() {
         return new DockerComposeContainer(new File("src/integrationTest/resources/compose-test.yml"))
+                .withLogConsumer(WEB_SERVICE_NAME, new Slf4jLogConsumer(logger))
                 .withExposedService(WEB_SERVICE_NAME, WEB_SERVICE_PORT,
                     Wait.forHttp("/actuator/health")
-                        .forStatusCode(200));
+                        .forStatusCode(200))
+                .withExposedService(DATABASE_NAME, DATABASE_PORT,
+                        Wait.forLogMessage(".*database system is ready to accept connections.*\\s", 2));
     }
 
     static class Initializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
